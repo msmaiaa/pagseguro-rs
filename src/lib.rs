@@ -1,5 +1,5 @@
 use public_key::PublicKeyClient;
-
+use reqwest::header;
 pub enum PagseguroEnvironment {
     Sandbox,
     Production,
@@ -13,9 +13,23 @@ pub struct PagseguroSDK {
 }
 
 impl PagseguroSDK {
-    pub fn new(token: &str, environment: PagseguroEnvironment) -> PagseguroSDK {
+    fn handle_headers(token: &str) -> header::HeaderMap {
+        let mut headers = header::HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            header::HeaderValue::from_static("application/json"),
+        );
+        headers.insert(
+            header::AUTHORIZATION,
+            header::HeaderValue::from_str(token).unwrap(),
+        );
+        headers
+    }
+    pub fn new(self, token: &str, environment: PagseguroEnvironment) -> PagseguroSDK {
+        let headers = self::PagseguroSDK::handle_headers(token);
+
         let _client = reqwest::Client::builder()
-            .http1_title_case_headers()
+            .default_headers(headers)
             .build()
             .unwrap();
         let _base_url = match environment {
@@ -54,8 +68,6 @@ pub mod public_key {
             match self
                 ._client
                 .post(format!("{}/{}/", self._base_url, "public-keys"))
-                .header("Authorization", format!("{}", self._token))
-                .header("Content-type", "application/json")
                 .json(&payload)
                 .send()
                 .await
