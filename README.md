@@ -5,7 +5,7 @@ endpoint | feature | state
 --- | --- | ---
 Chaves públicas | [Create public key](https://dev.pagseguro.uol.com.br/reference/post-public-keys) | :heavy_check_mark: |
 Chaves públicas | [Consult your public keys](https://dev.pagseguro.uol.com.br/reference/get-public-keys) | :heavy_check_mark: | 
-Chaves públicas | [Update your public keys](https://dev.pagseguro.uol.com.br/reference/put-public-keys) | :x: | 
+Chaves públicas | [Update your public keys](https://dev.pagseguro.uol.com.br/reference/put-public-keys) | :heavy_check_mark: | 
 Connect (Aplicação) | [Create an application](https://dev.pagseguro.uol.com.br/reference/connect-create-client) | :x: | 
 Connect (Aplicação) | [Consult an application](https://dev.pagseguro.uol.com.br/reference/connect-get-client) | :x: | 
 Connect (Connect Authorization) | [Request permission for an OAuth application](https://dev.pagseguro.uol.com.br/reference/connect-authorization-flow) | :x: | 

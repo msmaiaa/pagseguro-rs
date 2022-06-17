@@ -91,5 +91,19 @@ pub mod public_key {
                 }),
             }
         }
+        pub async fn update_public_keys(self) -> Result<response::UpdatePublicKeys, HttpError> {
+            let response = self
+                ._client
+                .put(Endpoint::UPDATE_PUBLIC_KEYS, None::<serde_json::Value>)
+                .await;
+            match response.status() {
+                reqwest::StatusCode::OK => {
+                    Ok(response.json::<response::UpdatePublicKeys>().await.unwrap())
+                }
+                _ => Err(HttpError {
+                    status: response.status().as_u16(),
+                }),
+            }
+        }
     }
 }

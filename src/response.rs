@@ -11,3 +11,9 @@ pub struct GetPublicKey {
     pub public_key: String,
     pub created_at: u64,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdatePublicKeys {
+    pub public_key: String,
+    pub created_at: u64,
+}

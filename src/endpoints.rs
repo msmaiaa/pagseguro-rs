@@ -2,6 +2,7 @@
 pub enum Endpoint {
     CREATE_PUBLIC_KEY,
     CONSULT_PUBLIC_KEYS,
+    UPDATE_PUBLIC_KEYS,
 }
 
 impl Endpoint {
@@ -9,6 +10,7 @@ impl Endpoint {
         match self {
             Endpoint::CREATE_PUBLIC_KEY => "/public-keys/",
             Endpoint::CONSULT_PUBLIC_KEYS => "/public-keys/card",
+            Endpoint::UPDATE_PUBLIC_KEYS => "/public-keys/card",
         }
     }
 }
