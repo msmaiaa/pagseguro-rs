@@ -30,12 +30,27 @@ impl HttpClient {
         };
         response.send().await.unwrap()
     }
+
     pub async fn get(self, endpoint: Endpoint) -> reqwest::Response {
         self._client
             .get(format!("{}{}", self._base_url, endpoint.as_str()))
             .send()
             .await
             .unwrap()
+    }
+
+    pub async fn put<T: serde::Serialize>(
+        self,
+        endpoint: Endpoint,
+        body: Option<T>,
+    ) -> reqwest::Response {
+        let mut response = self
+            ._client
+            .put(format!("{}{}", self._base_url, endpoint.as_str()));
+        if let Some(body) = body {
+            response = response.json(&body);
+        }
+        response.send().await.unwrap()
     }
 }
 #[derive(Debug)]
