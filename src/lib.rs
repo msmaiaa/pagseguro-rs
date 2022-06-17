@@ -25,6 +25,14 @@ impl PagseguroSDK {
         );
         headers
     }
+
+    fn handle_environment(environment: &PagseguroEnvironment) -> &'static str {
+        match environment {
+            PagseguroEnvironment::Sandbox => return "https://sandbox.api.pagseguro.com",
+            PagseguroEnvironment::Production => return "https://api.pagseguro.com",
+        };
+    }
+
     pub fn new(self, token: &str, environment: PagseguroEnvironment) -> PagseguroSDK {
         let headers = self::PagseguroSDK::handle_headers(token);
 
@@ -32,10 +40,7 @@ impl PagseguroSDK {
             .default_headers(headers)
             .build()
             .unwrap();
-        let _base_url = match environment {
-            PagseguroEnvironment::Sandbox => "https://sandbox.api.pagseguro.com",
-            PagseguroEnvironment::Production => "https://api.pagseguro.com",
-        };
+        let _base_url = self::PagseguroSDK::handle_environment(&environment);
         PagseguroSDK {
             _base_url: _base_url.to_string(),
             _token: token.to_string(),
