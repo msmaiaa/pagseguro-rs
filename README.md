@@ -3,7 +3,7 @@
 :x: :heavy_check_mark:
 endpoint | feature | state
 --- | --- | ---
-Chaves públicas | [Create public key](https://dev.pagseguro.uol.com.br/reference/post-public-keys) | :x: |
+Chaves públicas | [Create public key](https://dev.pagseguro.uol.com.br/reference/post-public-keys) | :heavy_check_mark: |
 Chaves públicas | [Consult your public keys](https://dev.pagseguro.uol.com.br/reference/get-public-keys) | :x: | 
 Chaves públicas | [Update your public keys](https://dev.pagseguro.uol.com.br/reference/put-public-keys) | :x: | 
 Connect (Aplicação) | [Create an application](https://dev.pagseguro.uol.com.br/reference/connect-create-client) | :x: | 
