@@ -1,3 +1,6 @@
+mod endpoints;
+mod response;
+
 use public_key::PublicKeyClient;
 use reqwest::header;
 pub enum PagseguroEnvironment {
@@ -6,9 +9,6 @@ pub enum PagseguroEnvironment {
 }
 
 pub struct PagseguroSDK {
-    _base_url: String,
-    _token: String,
-    _environment: PagseguroEnvironment,
     pub public_key: public_key::PublicKeyClient,
 }
 
@@ -33,58 +33,91 @@ impl PagseguroSDK {
         };
     }
 
-    pub fn new(self, token: &str, environment: PagseguroEnvironment) -> PagseguroSDK {
-        let headers = self::PagseguroSDK::handle_headers(token);
+    pub fn new(token: &str, environment: PagseguroEnvironment) -> PagseguroSDK {
+        let headers = PagseguroSDK::handle_headers(token);
+        let environment_url = PagseguroSDK::handle_environment(&environment);
 
-        let _client = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()
-            .unwrap();
-        let _base_url = self::PagseguroSDK::handle_environment(&environment);
+        let _client = http::HttpClient::new(environment_url.to_string(), headers);
+        let _base_url = PagseguroSDK::handle_environment(&environment);
         PagseguroSDK {
-            _base_url: _base_url.to_string(),
-            _token: token.to_string(),
-            _environment: environment,
-            public_key: PublicKeyClient::new(_client, _base_url.to_string(), token.to_string()),
+            public_key: PublicKeyClient::new(_client, _base_url.to_string()),
         }
     }
 }
 
-pub mod public_key {
-    use serde::{Deserialize, Serialize};
-    pub struct PublicKeyClient {
+pub mod http {
+    use crate::endpoints::Endpoint;
+    use reqwest::header;
+
+    pub struct HttpClient {
         _client: reqwest::Client,
         _base_url: String,
-        _token: String,
+    }
+    impl HttpClient {
+        pub fn new(base_url: String, headers: header::HeaderMap) -> HttpClient {
+            let _client = reqwest::Client::builder()
+                .default_headers(headers)
+                .build()
+                .unwrap();
+            HttpClient {
+                _client,
+                _base_url: base_url,
+            }
+        }
+
+        pub async fn post<T: serde::Serialize>(
+            self,
+            endpoint: Endpoint,
+            body: Option<T>,
+        ) -> reqwest::Response {
+            let mut response =
+                self._client
+                    .post(format!("{}{}", self._base_url, endpoint.as_str()));
+            if let Some(body) = body {
+                response = response.json(&body);
+            };
+            response.send().await.unwrap()
+        }
+    }
+    #[derive(Debug)]
+    pub struct HttpError {
+        pub status: u16,
+    }
+}
+
+pub mod public_key {
+
+    use crate::{
+        endpoints::Endpoint,
+        http::{HttpClient, HttpError},
+        response,
+    };
+    pub struct PublicKeyClient {
+        _client: HttpClient,
     }
 
     impl PublicKeyClient {
-        pub fn new(_client: reqwest::Client, _base_url: String, _token: String) -> PublicKeyClient {
-            PublicKeyClient {
-                _client,
-                _base_url,
-                _token,
-            }
+        pub fn new(_client: HttpClient, _base_url: String) -> PublicKeyClient {
+            PublicKeyClient { _client }
         }
 
-        pub async fn create_key(self) -> Result<CreatePublicKeyResponse, reqwest::Error> {
+        pub async fn create_key(self) -> Result<response::CreatePublicKey, HttpError> {
             let mut payload = std::collections::HashMap::new();
             payload.insert("type", "card");
-            match self
+            let response = self
                 ._client
-                .post(format!("{}/{}/", self._base_url, "public-keys"))
-                .json(&payload)
-                .send()
-                .await
-            {
-                Ok(response) => Ok(response.json::<CreatePublicKeyResponse>().await?),
-                Err(err) => Err(err),
+                .post(Endpoint::CREATE_PUBLIC_KEY, Some(payload))
+                .await;
+
+            match response.status() {
+                reqwest::StatusCode::OK => {
+                    Ok(response.json::<response::CreatePublicKey>().await.unwrap())
+                }
+
+                _ => Err(HttpError {
+                    status: response.status().as_u16(),
+                }),
             }
         }
-    }
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct CreatePublicKeyResponse {
-        pub public_key: String,
-        pub created_at: u64,
     }
 }
