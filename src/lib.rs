@@ -80,5 +80,16 @@ pub mod public_key {
                 }),
             }
         }
+        pub async fn get_public_key(self) -> Result<response::GetPublicKey, HttpError> {
+            let response = self._client.get(Endpoint::CONSULT_PUBLIC_KEYS).await;
+            match response.status() {
+                reqwest::StatusCode::OK => {
+                    Ok(response.json::<response::GetPublicKey>().await.unwrap())
+                }
+                _ => Err(HttpError {
+                    status: response.status().as_u16(),
+                }),
+            }
+        }
     }
 }
