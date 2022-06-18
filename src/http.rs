@@ -33,7 +33,7 @@ impl HttpClient {
         response.send().await.unwrap()
     }
 
-    pub async fn get(self, endpoint: Endpoint) -> reqwest::Response {
+    pub async fn get(self, endpoint: String) -> reqwest::Response {
         self._client
             .get(format!("{}{}", self._base_url, endpoint.as_str()))
             .send()

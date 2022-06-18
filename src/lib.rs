@@ -59,6 +59,7 @@ pub mod public_key {
         http::{HttpClient, HttpError},
         response,
     };
+
     pub struct PublicKeyClient {
         _client: HttpClient,
     }
@@ -91,7 +92,10 @@ pub mod public_key {
             }
         }
         pub async fn get_public_key(self) -> Result<response::GetPublicKey, HttpError> {
-            let response = self._client.get(Endpoint::CONSULT_PUBLIC_KEYS).await;
+            let response = self
+                ._client
+                .get(Endpoint::CONSULT_PUBLIC_KEYS.as_str().to_string())
+                .await;
             match response.status() {
                 reqwest::StatusCode::OK => {
                     Ok(response.json::<response::GetPublicKey>().await.unwrap())
@@ -127,6 +131,8 @@ pub mod orders {
         http::{HttpClient, HttpError},
         payload,
     };
+
+    #[derive(Clone)]
     pub struct OrderClient {
         _client: HttpClient,
     }
@@ -165,6 +171,21 @@ pub mod orders {
                 reqwest::StatusCode::OK | reqwest::StatusCode::CREATED => {
                     Ok(response.json::<ExistingOrder>().await.unwrap())
                 }
+                _ => Err({
+                    HttpError {
+                        status: response.status().as_u16(),
+                        message: response.json().await.unwrap(),
+                    }
+                }),
+            }
+        }
+        pub async fn get_order(self, order_id: &str) -> Result<ExistingOrder, HttpError> {
+            let endpoint = Endpoint::CONSULT_ORDER
+                .as_str()
+                .replace(":orderId", order_id);
+            let response = self._client.get(endpoint).await;
+            match response.status() {
+                reqwest::StatusCode::OK => Ok(response.json::<ExistingOrder>().await.unwrap()),
                 _ => Err({
                     HttpError {
                         status: response.status().as_u16(),
