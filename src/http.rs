@@ -1,6 +1,8 @@
 use crate::endpoints::Endpoint;
 use reqwest::header;
+use serde::{Deserialize, Serialize};
 
+#[derive(Clone)]
 pub struct HttpClient {
     _client: reqwest::Client,
     _base_url: String,
@@ -56,4 +58,16 @@ impl HttpClient {
 #[derive(Debug)]
 pub struct HttpError {
     pub status: u16,
+    pub message: PagseguroError,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PagseguroErrorMessage {
+    pub code: String,
+    pub description: String,
+    pub parameter_name: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PagseguroError {
+    pub error_messages: Vec<PagseguroErrorMessage>,
 }
