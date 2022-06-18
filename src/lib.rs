@@ -1,6 +1,7 @@
 pub mod common_types;
 mod endpoints;
 mod http;
+pub mod payload;
 mod response;
 
 use orders::OrderClient;
@@ -72,7 +73,10 @@ pub mod public_key {
             payload.insert("type", "card");
             let response = self
                 ._client
-                .post(Endpoint::CREATE_PUBLIC_KEY, Some(payload))
+                .post(
+                    Endpoint::CREATE_PUBLIC_KEY.as_str().to_string(),
+                    Some(payload),
+                )
                 .await;
 
             match response.status() {
@@ -121,6 +125,7 @@ pub mod orders {
         common_types::{ExistingOrder, Order},
         endpoints::Endpoint,
         http::{HttpClient, HttpError},
+        payload,
     };
     pub struct OrderClient {
         _client: HttpClient,
@@ -130,11 +135,32 @@ pub mod orders {
             OrderClient { _client }
         }
 
+        //	TODO: create better methods to handle different kinds of orders (qr_code, boleto, card, etc)
         pub async fn create_order(self, payload: Order) -> Result<ExistingOrder, HttpError> {
             let response = self
                 ._client
-                .post(Endpoint::CREATE_ORDER, Some(payload))
+                .post(Endpoint::CREATE_ORDER.as_str().to_string(), Some(payload))
                 .await;
+            match response.status() {
+                reqwest::StatusCode::OK | reqwest::StatusCode::CREATED => {
+                    Ok(response.json::<ExistingOrder>().await.unwrap())
+                }
+                _ => Err({
+                    HttpError {
+                        status: response.status().as_u16(),
+                        message: response.json().await.unwrap(),
+                    }
+                }),
+            }
+        }
+        //	TODO: check with all possible charges
+        pub async fn pay_order(
+            self,
+            payload: payload::PayOrder,
+            order_id: &str,
+        ) -> Result<ExistingOrder, HttpError> {
+            let endpoint = Endpoint::PAY_ORDER.as_str().replace(":orderId", order_id);
+            let response = self._client.post(endpoint, Some(payload)).await;
             match response.status() {
                 reqwest::StatusCode::OK | reqwest::StatusCode::CREATED => {
                     Ok(response.json::<ExistingOrder>().await.unwrap())

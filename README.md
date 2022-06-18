@@ -15,8 +15,8 @@ Connect | [Refresh access token](https://dev.pagseguro.uol.com.br/reference/conn
 Connect | [Revoke access token](https://dev.pagseguro.uol.com.br/reference/connect-revoke) | :x: | 
 Cadastro | [Create an account](https://dev.pagseguro.uol.com.br/reference/create-account) | :x: | 
 Cadastro | [Consult an account](https://dev.pagseguro.uol.com.br/reference/get-account) | :x: | 
-Pedido | [Create an order](https://dev.pagseguro.uol.com.br/reference/create-order) | :x: | 
-Pedido | [Pay an order](https://dev.pagseguro.uol.com.br/reference/order-pay) | :x: | 
+Pedido | [Create an order](https://dev.pagseguro.uol.com.br/reference/create-order) | :heavy_check_mark: | 
+Pedido | [Pay an order](https://dev.pagseguro.uol.com.br/reference/order-pay) | :heavy_check_mark: | 
 Pedido | [Consult an order](https://dev.pagseguro.uol.com.br/reference/get-order) | :x: | 
 Cobrança | [Create a charge (all?)](https://dev.pagseguro.uol.com.br/reference/create-charge) | :x: | 
 Cobrança | [Capture a charge](https://dev.pagseguro.uol.com.br/reference/charge-capture) | :x: | 

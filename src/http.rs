@@ -21,7 +21,7 @@ impl HttpClient {
 
     pub async fn post<T: serde::Serialize>(
         self,
-        endpoint: Endpoint,
+        endpoint: String,
         body: Option<T>,
     ) -> reqwest::Response {
         let mut response = self
