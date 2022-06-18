@@ -1,8 +1,11 @@
+pub mod common_types;
 mod endpoints;
 mod http;
 mod response;
 
+use orders::OrderClient;
 use public_key::PublicKeyClient;
+
 use reqwest::header;
 pub enum PagseguroEnvironment {
     Sandbox,
@@ -11,6 +14,7 @@ pub enum PagseguroEnvironment {
 
 pub struct PagseguroSDK {
     pub public_key: public_key::PublicKeyClient,
+    pub orders: orders::OrderClient,
 }
 
 impl PagseguroSDK {
@@ -41,7 +45,8 @@ impl PagseguroSDK {
         let _client = http::HttpClient::new(environment_url.to_string(), headers);
         let _base_url = PagseguroSDK::handle_environment(&environment);
         PagseguroSDK {
-            public_key: PublicKeyClient::new(_client, _base_url.to_string()),
+            public_key: PublicKeyClient::new(_client.clone()),
+            orders: OrderClient::new(_client.clone()),
         }
     }
 }
@@ -58,7 +63,7 @@ pub mod public_key {
     }
 
     impl PublicKeyClient {
-        pub fn new(_client: HttpClient, _base_url: String) -> PublicKeyClient {
+        pub fn new(_client: HttpClient) -> PublicKeyClient {
             PublicKeyClient { _client }
         }
 
@@ -77,6 +82,7 @@ pub mod public_key {
 
                 _ => Err(HttpError {
                     status: response.status().as_u16(),
+                    message: response.json().await.unwrap(),
                 }),
             }
         }
@@ -88,6 +94,7 @@ pub mod public_key {
                 }
                 _ => Err(HttpError {
                     status: response.status().as_u16(),
+                    message: response.json().await.unwrap(),
                 }),
             }
         }
@@ -102,6 +109,41 @@ pub mod public_key {
                 }
                 _ => Err(HttpError {
                     status: response.status().as_u16(),
+                    message: response.json().await.unwrap(),
+                }),
+            }
+        }
+    }
+}
+
+pub mod orders {
+    use crate::{
+        common_types::{ExistingOrder, Order},
+        endpoints::Endpoint,
+        http::{HttpClient, HttpError},
+    };
+    pub struct OrderClient {
+        _client: HttpClient,
+    }
+    impl OrderClient {
+        pub fn new(_client: HttpClient) -> OrderClient {
+            OrderClient { _client }
+        }
+
+        pub async fn create_order(self, payload: Order) -> Result<ExistingOrder, HttpError> {
+            let response = self
+                ._client
+                .post(Endpoint::CREATE_ORDER, Some(payload))
+                .await;
+            match response.status() {
+                reqwest::StatusCode::OK | reqwest::StatusCode::CREATED => {
+                    Ok(response.json::<ExistingOrder>().await.unwrap())
+                }
+                _ => Err({
+                    HttpError {
+                        status: response.status().as_u16(),
+                        message: response.json().await.unwrap(),
+                    }
                 }),
             }
         }

@@ -3,6 +3,7 @@ pub enum Endpoint {
     CREATE_PUBLIC_KEY,
     CONSULT_PUBLIC_KEYS,
     UPDATE_PUBLIC_KEYS,
+    CREATE_ORDER,
 }
 
 impl Endpoint {
@@ -11,6 +12,7 @@ impl Endpoint {
             Endpoint::CREATE_PUBLIC_KEY => "/public-keys/",
             Endpoint::CONSULT_PUBLIC_KEYS => "/public-keys/card",
             Endpoint::UPDATE_PUBLIC_KEYS => "/public-keys/card",
+            Endpoint::CREATE_ORDER => "/orders/",
         }
     }
 }
