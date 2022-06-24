@@ -1,15 +1,16 @@
 pub mod common_types;
+pub mod payload;
+
 mod endpoints;
 mod http;
-pub mod payload;
 mod response;
 
 use charges::ChargeClient;
-use common_types::Charge;
+use common_types::SDKError;
 use orders::OrderClient;
 use public_key::PublicKeyClient;
 
-use reqwest::header;
+use reqwest::{header, Response};
 pub enum PagseguroEnvironment {
     Sandbox,
     Production,
@@ -59,8 +60,7 @@ impl PagseguroSDK {
 pub mod public_key {
 
     use crate::{
-        endpoints::Endpoint,
-        http::{HttpClient, HttpError},
+        common_types::SDKError, endpoints::Endpoint, handle_response_status, http::HttpClient,
         response,
     };
 
@@ -73,57 +73,29 @@ pub mod public_key {
             PublicKeyClient { _client }
         }
 
-        pub async fn create_key(self) -> Result<response::CreatePublicKey, HttpError> {
+        pub async fn create_key(self) -> Result<response::CreatePublicKey, SDKError> {
             let mut payload = std::collections::HashMap::new();
             payload.insert("type", "card");
             let response = self
                 ._client
-                .post(
-                    Endpoint::CREATE_PUBLIC_KEY.as_str().to_string(),
-                    Some(payload),
-                )
+                .post(Endpoint::CREATE_PUBLIC_KEY.as_string(), Some(payload))
                 .await;
 
-            match response.status() {
-                reqwest::StatusCode::OK => {
-                    Ok(response.json::<response::CreatePublicKey>().await.unwrap())
-                }
-
-                _ => Err(HttpError {
-                    status: response.status().as_u16(),
-                    message: response.json().await.unwrap(),
-                }),
-            }
+            handle_response_status(response).await
         }
-        pub async fn get_public_key(self) -> Result<response::GetPublicKey, HttpError> {
+        pub async fn get_public_key(self) -> Result<response::GetPublicKey, SDKError> {
             let response = self
                 ._client
-                .get(Endpoint::CONSULT_PUBLIC_KEYS.as_str().to_string())
+                .get(Endpoint::CONSULT_PUBLIC_KEYS.as_string())
                 .await;
-            match response.status() {
-                reqwest::StatusCode::OK => {
-                    Ok(response.json::<response::GetPublicKey>().await.unwrap())
-                }
-                _ => Err(HttpError {
-                    status: response.status().as_u16(),
-                    message: response.json().await.unwrap(),
-                }),
-            }
+            handle_response_status(response).await
         }
-        pub async fn update_public_keys(self) -> Result<response::UpdatePublicKeys, HttpError> {
+        pub async fn update_public_keys(self) -> Result<response::UpdatePublicKeys, SDKError> {
             let response = self
                 ._client
                 .put(Endpoint::UPDATE_PUBLIC_KEYS, None::<serde_json::Value>)
                 .await;
-            match response.status() {
-                reqwest::StatusCode::OK => {
-                    Ok(response.json::<response::UpdatePublicKeys>().await.unwrap())
-                }
-                _ => Err(HttpError {
-                    status: response.status().as_u16(),
-                    message: response.json().await.unwrap(),
-                }),
-            }
+            handle_response_status(response).await
         }
     }
 }
@@ -131,9 +103,10 @@ pub mod public_key {
 /// # Orders
 pub mod orders {
     use crate::{
-        common_types::{ExistingOrder, Order},
+        common_types::{ExistingOrder, Order, SDKError},
         endpoints::Endpoint,
-        http::{HttpClient, HttpError},
+        handle_response_status,
+        http::HttpClient,
         payload,
     };
 
@@ -147,57 +120,31 @@ pub mod orders {
         }
 
         //	TODO: create better methods to handle different kinds of orders (qr_code, boleto, card, etc)
-        pub async fn create_order(self, payload: Order) -> Result<ExistingOrder, HttpError> {
+        pub async fn create_order(self, payload: Order) -> Result<ExistingOrder, SDKError> {
             let response = self
                 ._client
-                .post(Endpoint::CREATE_ORDER.as_str().to_string(), Some(payload))
+                .post(Endpoint::CREATE_ORDER.as_string(), Some(payload))
                 .await;
-            match response.status() {
-                reqwest::StatusCode::OK | reqwest::StatusCode::CREATED => {
-                    Ok(response.json::<ExistingOrder>().await.unwrap())
-                }
-                _ => Err({
-                    HttpError {
-                        status: response.status().as_u16(),
-                        message: response.json().await.unwrap(),
-                    }
-                }),
-            }
+            handle_response_status(response).await
         }
         //	TODO: check with all possible charges
         pub async fn pay_order(
             self,
             payload: payload::PayOrder,
             order_id: &str,
-        ) -> Result<ExistingOrder, HttpError> {
-            let endpoint = Endpoint::PAY_ORDER.as_str().replace(":orderId", order_id);
+        ) -> Result<ExistingOrder, SDKError> {
+            let endpoint = Endpoint::PAY_ORDER
+                .as_string()
+                .replace(":orderId", order_id);
             let response = self._client.post(endpoint, Some(payload)).await;
-            match response.status() {
-                reqwest::StatusCode::OK | reqwest::StatusCode::CREATED => {
-                    Ok(response.json::<ExistingOrder>().await.unwrap())
-                }
-                _ => Err({
-                    HttpError {
-                        status: response.status().as_u16(),
-                        message: response.json().await.unwrap(),
-                    }
-                }),
-            }
+            handle_response_status(response).await
         }
-        pub async fn get_order(self, order_id: &str) -> Result<ExistingOrder, HttpError> {
+        pub async fn get_order(self, order_id: &str) -> Result<ExistingOrder, SDKError> {
             let endpoint = Endpoint::CONSULT_ORDER
-                .as_str()
+                .as_string()
                 .replace(":orderId", order_id);
             let response = self._client.get(endpoint).await;
-            match response.status() {
-                reqwest::StatusCode::OK => Ok(response.json::<ExistingOrder>().await.unwrap()),
-                _ => Err({
-                    HttpError {
-                        status: response.status().as_u16(),
-                        message: response.json().await.unwrap(),
-                    }
-                }),
-            }
+            handle_response_status(response).await
         }
     }
 }
@@ -206,9 +153,10 @@ pub mod charges {
     use serde::{de::DeserializeOwned, Serialize};
 
     use crate::{
-        common_types::{BoletoCharge, CardCharge},
+        common_types::{BoletoCharge, CardCharge, SDKError},
         endpoints::Endpoint,
-        http::{HttpClient, HttpError},
+        handle_response_status,
+        http::HttpClient,
         response::CreateBoletoChargeResponse,
     };
 
@@ -226,34 +174,42 @@ pub mod charges {
         pub async fn create_boleto_charge(
             self,
             payload: BoletoCharge,
-        ) -> Result<CreateBoletoChargeResponse, HttpError> {
+        ) -> Result<CreateBoletoChargeResponse, SDKError> {
             self.create_charge(payload).await
         }
 
         pub async fn create_credit_card_charge(
             self,
             payload: CardCharge,
-        ) -> Result<CardCharge, HttpError> {
+        ) -> Result<CardCharge, SDKError> {
             self.create_charge(payload).await
         }
 
         async fn create_charge<T: Serialize + DeserializeOwned, K: Serialize + DeserializeOwned>(
             self,
             payload: T,
-        ) -> Result<K, HttpError> {
+        ) -> Result<K, SDKError> {
             let response = self
                 ._client
-                .post(Endpoint::CREATE_CHARGE.as_str().to_string(), Some(payload))
+                .post(Endpoint::CREATE_CHARGE.as_string(), Some(payload))
                 .await;
-            match response.status() {
-                reqwest::StatusCode::OK => Ok(response.json::<K>().await.unwrap()),
-                _ => Err({
-                    HttpError {
-                        status: response.status().as_u16(),
-                        message: response.json().await.unwrap(),
-                    }
-                }),
-            }
+            handle_response_status(response).await
+        }
+    }
+}
+
+async fn handle_response_status<T: serde::Serialize + serde::de::DeserializeOwned>(
+    response: Response,
+) -> Result<T, SDKError> {
+    match response.status() {
+        reqwest::StatusCode::CREATED | reqwest::StatusCode::OK => response
+            .json::<T>()
+            .await
+            .or_else(|err| Err(SDKError::RequestError(err))),
+        reqwest::StatusCode::UNAUTHORIZED => Err(SDKError::Unauthorized),
+        _ => {
+            let decoded_error = response.json::<http::PagseguroError>().await.unwrap();
+            Err(SDKError::PagseguroError(decoded_error))
         }
     }
 }

@@ -1,5 +1,14 @@
 use serde::{Deserialize, Serialize};
 
+use crate::http::PagseguroError;
+
+#[derive(Debug)]
+pub enum SDKError {
+    PagseguroError(PagseguroError),
+    RequestError(reqwest::Error),
+    Unauthorized,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Phone {
     #[serde(skip_serializing_if = "Option::is_none")]
