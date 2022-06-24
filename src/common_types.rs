@@ -67,10 +67,10 @@ pub struct Summary {
 pub struct Amount {
     pub value: u32,
     pub currency: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub summary: Option<Summary>,
+    pub summary: String,
 }
 
+// TODO: create a more specific payment response for each payment method?
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PaymentResponse {
     pub code: i16,
@@ -83,7 +83,8 @@ pub struct PaymentResponse {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CardHolder {
     pub name: String,
-    pub tax_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tax_id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -108,6 +109,15 @@ pub struct Card {
     pub brand: String,
     pub first_digits: u32,
     pub last_digits: u16,
+    pub holder: CardHolder,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CreditCard {
+    pub number: String,
+    pub exp_month: String,
+    pub exp_year: String,
+    pub security_code: String,
     pub holder: CardHolder,
 }
 
@@ -145,6 +155,7 @@ pub struct Boleto {
     pub holder: BoletoHolder,
 }
 
+// TODO: refactor me
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PaymentMethod {
     #[serde(rename = "type")]
@@ -163,6 +174,23 @@ pub struct PaymentMethod {
     pub authentication_method: Option<AuthenticationMethod>,
     /// Required when the payment method is boleto
     pub boleto: Option<Boleto>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CreditCardPayment {
+    #[serde(rename = "type")]
+    pub _type: String,
+    pub installments: u8,
+    pub capture: bool,
+    pub soft_descriptor: String,
+    pub card: CreditCard,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BoletoPayment {
+    #[serde(rename = "type")]
+    pub _type: String,
+    pub boleto: Boleto,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -190,6 +218,7 @@ pub struct Link {
     pub _type: String,
 }
 
+/// TODO: refactor me
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Charge {
     pub id: String,
@@ -219,10 +248,24 @@ pub struct Charge {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct BoletoCharge {}
+pub struct BoletoCharge {
+    pub reference_id: String,
+    pub description: String,
+    pub amount: Amount,
+    pub payment_method: BoletoPayment,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notification_urls: Option<Vec<String>>,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct CardCharge {}
+pub struct CardCharge {
+    pub reference_id: String,
+    pub description: String,
+    pub amount: Amount,
+    pub payment_method: CreditCardPayment,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notification_urls: Option<Vec<String>>,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Order {

@@ -17,8 +17,9 @@ Cadastro | [Create an account](https://dev.pagseguro.uol.com.br/reference/create
 Cadastro | [Consult an account](https://dev.pagseguro.uol.com.br/reference/get-account) | :x: | 
 Pedido | [Create an order](https://dev.pagseguro.uol.com.br/reference/create-order) | :heavy_check_mark: | 
 Pedido | [Pay an order](https://dev.pagseguro.uol.com.br/reference/order-pay) | :heavy_check_mark: | 
-Pedido | [Consult an order](https://dev.pagseguro.uol.com.br/reference/get-order) | :x: | 
-Cobrança | [Create a charge (all?)](https://dev.pagseguro.uol.com.br/reference/create-charge) | :x: | 
+Pedido | [Consult an order](https://dev.pagseguro.uol.com.br/reference/get-order) | :heavy_check_mark: | 
+Cobrança | [Create a boleto charge ](https://dev.pagseguro.uol.com.br/reference/charge-boleto) | :heavy_check_mark: | 
+Cobrança | [Create a credit card charge ](https://dev.pagseguro.uol.com.br/reference/charge-credit) | :heavy_check_mark: |
 Cobrança | [Capture a charge](https://dev.pagseguro.uol.com.br/reference/charge-capture) | :x: | 
 Cobrança | [Refund/Cancel a charge](https://dev.pagseguro.uol.com.br/reference/charge-refund) | :x: | 
 Cobrança | [Consult a charge](https://dev.pagseguro.uol.com.br/reference/get-charge) | :x: | 

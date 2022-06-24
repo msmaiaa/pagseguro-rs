@@ -4,6 +4,8 @@ mod http;
 pub mod payload;
 mod response;
 
+use charges::ChargeClient;
+use common_types::Charge;
 use orders::OrderClient;
 use public_key::PublicKeyClient;
 
@@ -16,6 +18,7 @@ pub enum PagseguroEnvironment {
 pub struct PagseguroSDK {
     pub public_key: public_key::PublicKeyClient,
     pub orders: orders::OrderClient,
+    pub charges: charges::ChargeClient,
 }
 
 impl PagseguroSDK {
@@ -48,6 +51,7 @@ impl PagseguroSDK {
         PagseguroSDK {
             public_key: PublicKeyClient::new(_client.clone()),
             orders: OrderClient::new(_client.clone()),
+            charges: ChargeClient::new(_client.clone()),
         }
     }
 }
@@ -124,6 +128,7 @@ pub mod public_key {
     }
 }
 
+/// # Orders
 pub mod orders {
     use crate::{
         common_types::{ExistingOrder, Order},
@@ -186,6 +191,62 @@ pub mod orders {
             let response = self._client.get(endpoint).await;
             match response.status() {
                 reqwest::StatusCode::OK => Ok(response.json::<ExistingOrder>().await.unwrap()),
+                _ => Err({
+                    HttpError {
+                        status: response.status().as_u16(),
+                        message: response.json().await.unwrap(),
+                    }
+                }),
+            }
+        }
+    }
+}
+
+pub mod charges {
+    use serde::{de::DeserializeOwned, Serialize};
+
+    use crate::{
+        common_types::{BoletoCharge, CardCharge},
+        endpoints::Endpoint,
+        http::{HttpClient, HttpError},
+        response::CreateBoletoChargeResponse,
+    };
+
+    #[derive(Clone)]
+    pub struct ChargeClient {
+        _client: HttpClient,
+    }
+
+    impl ChargeClient {
+        pub fn new(_client: HttpClient) -> ChargeClient {
+            ChargeClient { _client }
+        }
+
+        //	TODO: create more types for existing charges
+        pub async fn create_boleto_charge(
+            self,
+            payload: BoletoCharge,
+        ) -> Result<CreateBoletoChargeResponse, HttpError> {
+            self.create_charge(payload).await
+        }
+
+        pub async fn create_credit_card_charge(
+            self,
+            payload: CardCharge,
+        ) -> Result<CardCharge, HttpError> {
+            self.create_charge(payload).await
+        }
+
+        async fn create_charge<T: Serialize + DeserializeOwned, K: Serialize + DeserializeOwned>(
+            self,
+            payload: T,
+        ) -> Result<K, HttpError> {
+            let response = self
+                ._client
+                .post(Endpoint::CREATE_CHARGE.as_str().to_string(), Some(payload))
+                .await;
+            match response.status() {
+                reqwest::StatusCode::OK => Ok(response.json::<K>().await.unwrap()),
                 _ => Err({
                     HttpError {
                         status: response.status().as_u16(),

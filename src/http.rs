@@ -58,7 +58,7 @@ impl HttpClient {
 #[derive(Debug)]
 pub struct HttpError {
     pub status: u16,
-    pub message: PagseguroError,
+    pub message: Option<PagseguroError>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

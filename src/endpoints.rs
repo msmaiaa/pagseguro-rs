@@ -6,6 +6,7 @@ pub enum Endpoint {
     CREATE_ORDER,
     PAY_ORDER,
     CONSULT_ORDER,
+    CREATE_CHARGE,
 }
 
 impl Endpoint {
@@ -17,6 +18,7 @@ impl Endpoint {
             Endpoint::CREATE_ORDER => "/orders/",
             Endpoint::PAY_ORDER => "/orders/:orderId/pay",
             Endpoint::CONSULT_ORDER => "/orders/:orderId",
+            Endpoint::CREATE_CHARGE => "/charges",
         }
     }
 }
