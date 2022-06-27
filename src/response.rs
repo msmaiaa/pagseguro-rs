@@ -87,3 +87,20 @@ pub struct BoletoPaymentResponse {
     pub _type: String,
     pub boleto: BoletoResponse,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CreateApplicationResponse {
+    pub name: String,
+    pub client_id: String,
+    pub client_secret: String,
+    pub account_id: String,
+    pub client_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub site: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub redirect_uri: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logo: Option<String>,
+}

@@ -7,6 +7,7 @@ mod response;
 
 use charges::ChargeClient;
 use common_types::SDKError;
+use connect::ConnectClient;
 use orders::OrderClient;
 use public_key::PublicKeyClient;
 
@@ -20,6 +21,7 @@ pub struct PagseguroSDK {
     pub public_key: public_key::PublicKeyClient,
     pub orders: orders::OrderClient,
     pub charges: charges::ChargeClient,
+    pub connect: connect::ConnectClient,
 }
 
 impl PagseguroSDK {
@@ -52,6 +54,36 @@ impl PagseguroSDK {
             public_key: PublicKeyClient::new(http_client.clone()),
             orders: OrderClient::new(http_client.clone()),
             charges: ChargeClient::new(http_client.clone()),
+            connect: ConnectClient::new(http_client.clone()),
+        }
+    }
+}
+
+pub mod connect {
+    use crate::{
+        common_types::SDKError, endpoints::Endpoint, handle_response_status, http::HttpClient,
+    };
+
+    pub struct ConnectClient {
+        _client: HttpClient,
+    }
+
+    impl ConnectClient {
+        pub fn new(http_client: HttpClient) -> ConnectClient {
+            ConnectClient {
+                _client: http_client,
+            }
+        }
+
+        pub async fn create_application(
+            self,
+            body: crate::payload::CreateApplication,
+        ) -> Result<crate::response::CreateApplicationResponse, SDKError> {
+            let response = self
+                ._client
+                .post(Endpoint::CREATE_APPLICATION.as_string(), Some(body))
+                .await;
+            handle_response_status(response).await
         }
     }
 }
