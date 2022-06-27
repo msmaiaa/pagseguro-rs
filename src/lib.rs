@@ -78,10 +78,26 @@ pub mod connect {
         pub async fn create_application(
             self,
             body: crate::payload::CreateApplication,
-        ) -> Result<crate::response::CreateApplicationResponse, SDKError> {
+        ) -> Result<crate::common_types::Application, SDKError> {
             let response = self
                 ._client
                 .post(Endpoint::CREATE_APPLICATION.as_string(), Some(body))
+                .await;
+            handle_response_status(response).await
+        }
+
+        ///	The api doesnt work for some reason.
+        pub async fn consult_application(
+            self,
+            client_id: &str,
+        ) -> Result<crate::common_types::Application, SDKError> {
+            let response = self
+                ._client
+                .get(
+                    Endpoint::CONSULT_APPLICATION
+                        .as_string()
+                        .replace(":clientId", client_id),
+                )
                 .await;
             handle_response_status(response).await
         }

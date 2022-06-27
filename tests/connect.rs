@@ -16,3 +16,9 @@ async fn create_application() {
         .await;
     assert!(result.is_ok());
 }
+
+// #[tokio::test]
+// async fn consult_application() {
+//     let result = get_sdk().connect.consult_application("12345").await;
+//     assert!(result.is_ok());
+// }

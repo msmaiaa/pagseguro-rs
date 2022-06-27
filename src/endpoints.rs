@@ -8,6 +8,7 @@ pub enum Endpoint {
     CONSULT_ORDER,
     CREATE_CHARGE,
     CREATE_APPLICATION,
+    CONSULT_APPLICATION,
 }
 
 impl Endpoint {
@@ -21,6 +22,7 @@ impl Endpoint {
             Endpoint::CONSULT_ORDER => "/orders/:orderId".to_string(),
             Endpoint::CREATE_CHARGE => "/charges".to_string(),
             Endpoint::CREATE_APPLICATION => "/oauth2/application".to_string(),
+            Endpoint::CONSULT_APPLICATION => "/oauth2/application/:clientId".to_string(),
         }
     }
 }
