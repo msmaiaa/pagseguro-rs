@@ -23,7 +23,7 @@ pub struct PagseguroSDK {
 }
 
 impl PagseguroSDK {
-    fn handle_headers(token: &str) -> header::HeaderMap {
+    fn get_default_headers(token: &str) -> header::HeaderMap {
         let mut headers = header::HeaderMap::new();
         headers.insert(
             header::CONTENT_TYPE,
@@ -44,15 +44,14 @@ impl PagseguroSDK {
     }
 
     pub fn new(token: &str, environment: PagseguroEnvironment) -> PagseguroSDK {
-        let headers = PagseguroSDK::handle_headers(token);
+        let headers = PagseguroSDK::get_default_headers(token);
         let environment_url = PagseguroSDK::handle_environment(&environment);
 
-        let _client = http::HttpClient::new(environment_url.to_string(), headers);
-        let _base_url = PagseguroSDK::handle_environment(&environment);
+        let http_client = http::HttpClient::new(environment_url.to_string(), headers);
         PagseguroSDK {
-            public_key: PublicKeyClient::new(_client.clone()),
-            orders: OrderClient::new(_client.clone()),
-            charges: ChargeClient::new(_client.clone()),
+            public_key: PublicKeyClient::new(http_client.clone()),
+            orders: OrderClient::new(http_client.clone()),
+            charges: ChargeClient::new(http_client.clone()),
         }
     }
 }
@@ -69,8 +68,10 @@ pub mod public_key {
     }
 
     impl PublicKeyClient {
-        pub fn new(_client: HttpClient) -> PublicKeyClient {
-            PublicKeyClient { _client }
+        pub fn new(http_client: HttpClient) -> PublicKeyClient {
+            PublicKeyClient {
+                _client: http_client,
+            }
         }
 
         pub async fn create_key(self) -> Result<response::CreatePublicKey, SDKError> {
@@ -80,9 +81,9 @@ pub mod public_key {
                 ._client
                 .post(Endpoint::CREATE_PUBLIC_KEY.as_string(), Some(payload))
                 .await;
-
             handle_response_status(response).await
         }
+
         pub async fn get_public_key(self) -> Result<response::GetPublicKey, SDKError> {
             let response = self
                 ._client
@@ -90,6 +91,7 @@ pub mod public_key {
                 .await;
             handle_response_status(response).await
         }
+
         pub async fn update_public_keys(self) -> Result<response::UpdatePublicKeys, SDKError> {
             let response = self
                 ._client
@@ -101,6 +103,8 @@ pub mod public_key {
 }
 
 /// # Orders
+///
+///	Currently not working
 pub mod orders {
     use crate::{
         common_types::{ExistingOrder, Order, SDKError},
@@ -139,6 +143,7 @@ pub mod orders {
             let response = self._client.post(endpoint, Some(payload)).await;
             handle_response_status(response).await
         }
+
         pub async fn get_order(self, order_id: &str) -> Result<ExistingOrder, SDKError> {
             let endpoint = Endpoint::CONSULT_ORDER
                 .as_string()
@@ -157,7 +162,7 @@ pub mod charges {
         endpoints::Endpoint,
         handle_response_status,
         http::HttpClient,
-        response::CreateBoletoChargeResponse,
+        response::{CreateBoletoChargeResponse, CreateCreditCardChargeResponse},
     };
 
     #[derive(Clone)]
@@ -166,8 +171,10 @@ pub mod charges {
     }
 
     impl ChargeClient {
-        pub fn new(_client: HttpClient) -> ChargeClient {
-            ChargeClient { _client }
+        pub fn new(http_client: HttpClient) -> ChargeClient {
+            ChargeClient {
+                _client: http_client,
+            }
         }
 
         //	TODO: create more types for existing charges
@@ -181,7 +188,7 @@ pub mod charges {
         pub async fn create_credit_card_charge(
             self,
             payload: CardCharge,
-        ) -> Result<CardCharge, SDKError> {
+        ) -> Result<CreateCreditCardChargeResponse, SDKError> {
             self.create_charge(payload).await
         }
 

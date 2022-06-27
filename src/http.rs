@@ -48,7 +48,7 @@ impl HttpClient {
     ) -> reqwest::Response {
         let mut response = self
             ._client
-            .put(format!("{}{}", self._base_url, endpoint.as_str()));
+            .put(format!("{}{}", self._base_url, endpoint.as_string()));
         if let Some(body) = body {
             response = response.json(&body);
         }

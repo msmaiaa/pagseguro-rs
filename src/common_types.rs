@@ -48,6 +48,7 @@ pub struct Address {
     pub locality: String,
     pub city: String,
     pub region_code: String,
+    pub region: String,
     ///	ISO 3166-2 format (https://en.wikipedia.org/wiki/ISO_3166-2)
     pub country: String,
     pub postal_code: String,
@@ -76,13 +77,14 @@ pub struct Summary {
 pub struct Amount {
     pub value: u32,
     pub currency: String,
-    pub summary: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub summary: Option<Summary>,
 }
 
 // TODO: create a more specific payment response for each payment method?
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PaymentResponse {
-    pub code: i16,
+    pub code: String,
     pub message: String,
     ///	NSU number, in the case that the payment has been approved by the issuer
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -190,6 +192,8 @@ pub struct CreditCardPayment {
     #[serde(rename = "type")]
     pub _type: String,
     pub installments: u8,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capture_before: Option<String>,
     pub capture: bool,
     pub soft_descriptor: String,
     pub card: CreditCard,
